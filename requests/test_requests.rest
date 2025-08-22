@@ -1,0 +1,11 @@
+GET http://localhost:3003/api/blogs
+###
+POST http://localhost:3003/api/blogs HTTP/1.1
+Content-Type: application/json
+
+{
+    "title": "JS essentials",
+    "author": "Uncle Bob",
+    "url": "Some-fake-url",
+    "likes": 7
+}
