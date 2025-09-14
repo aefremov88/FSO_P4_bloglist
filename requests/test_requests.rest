@@ -1,5 +1,11 @@
 GET http://localhost:3003/api/blogs
 ###
+GET http://localhost:3003/api/users/68c5e53a58f48b5adc80390b
+
+###
+GET http://localhost:3003/api/users/
+
+###
 POST http://localhost:3003/api/blogs HTTP/1.1
 Content-Type: application/json
 
@@ -8,4 +14,49 @@ Content-Type: application/json
     "author": "Uncle Bob",
     "url": "Some-fake-url",
     "likes": 7
+}
+###
+POST http://localhost:3003/api/blogs HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlVzZXIzIiwiaWQiOiI2OGM1YjhjYTE0MzUxYThmYjBiM2I1ZmQiLCJpYXQiOjE3NTc3OTM2ODl9.ujQRBY481bwzA6QocVgnLBaXgg8LHtCFUGqsrGNrU0Q
+
+{
+    "title": "JS essentials",
+    "author": "Uncle Bob",
+    "url": "Some-fake-url",
+    "likes": 7
+}
+###
+DELETE http://localhost:3003/api/blogs/68c5ededa1c18005b4dd7055 HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlVzZXIzIiwiaWQiOiI2OGM1YjhjYTE0MzUxYThmYjBiM2I1ZmQiLCJpYXQiOjE3NTc3OTM2ODl9.ujQRBY481bwzA6QocVgnLBaXgg8LHtCFUGqsrGNrU0Q
+
+###
+DELETE http://localhost:3003/api/blogs/68c5b9db76d9500d77931689 HTTP/1.1
+Content-Type: application/json
+
+###
+POST http://localhost:3003/api/users HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "User3",
+    "name": "Uncle Blob",
+    "password": "1111"
+}
+###
+POST http://localhost:3003/api/login HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "User3",
+    "password": "1111"
+}
+###
+POST http://localhost:3003/api/login HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "User3",
+    "password": "2222"
 }

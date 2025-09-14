@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 const helper = require('./test_helper')
 
 const api = supertest(app)
@@ -11,6 +12,13 @@ const api = supertest(app)
 // Clear up and load test data into test db instance
 beforeEach(async () => {
   await Blog.deleteMany({})
+  await User.deleteMany({});
+
+  await api
+    .post('/api/users')
+    .send({ username: 'TestUser', name: 'Test', password: '1111' })
+    .expect(201);
+
 
   for (let blog of helper.initialBlogs) {
     let blogObject = new Blog(blog)
@@ -42,6 +50,20 @@ describe('GET all blogs', () => {
 describe('POST', () => {
 
     test('a valid note can be added ', async () => {
+
+        const user = {
+            "username": "TestUser",
+            "password": "1111"
+        }
+
+        const logResp = await api
+            .post('/api/login')
+            .send(user)
+            .expect(200)
+            .expect('Content-Type', /json/)
+
+        const token = logResp.body.token
+
         const newBlog = {
             title: "Test title",
             author: "Test author",
@@ -51,6 +73,7 @@ describe('POST', () => {
 
         await api
             .post('/api/blogs')
+            .set('Authorization', 'Bearer ' + token)
             .send(newBlog)
             .expect(201)
             .expect('Content-Type', /application\/json/)
@@ -66,6 +89,19 @@ describe('POST', () => {
     })
 
     test('a valid blog can be added with NA likes', async () => {
+
+        const user = {
+            "username": "TestUser",
+            "password": "1111"
+        }
+
+        const logResp = await api
+            .post('/api/login')
+            .send(user)
+            .expect(200)
+            .expect('Content-Type', /json/)
+
+        const token = logResp.body.token
         const newBlog = {
             title: "Test2 title",
             author: "Test2 author",
@@ -74,6 +110,7 @@ describe('POST', () => {
 
         const result = await api
             .post('/api/blogs')
+            .set('Authorization', 'Bearer ' + token)
             .send(newBlog)
 
         assert.strictEqual(result.body.likes, 0)
@@ -104,16 +141,45 @@ describe('POST', () => {
 
 describe('DELETE', () => {
     test('deletion of a note', async () => {
-        const blogsAtStart = await helper.blogsInDb()
-        const blogToDelete = blogsAtStart[0]
 
-        await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204)
+        const user = {
+            "username": "TestUser",
+            "password": "1111"
+        }
+
+        const logResp = await api
+            .post('/api/login')
+            .send(user)
+            .expect(200)
+            .expect('Content-Type', /json/)
+
+        const token = logResp.body.token
+        const newBlog = {
+            title: "Test2 title",
+            author: "Test2 author",
+            url: "http://",
+        }
+
+        const result = await api
+            .post('/api/blogs')
+            .set('Authorization', 'Bearer ' + token)
+            .send(newBlog)
+
+        const idToDelete = result.body.id
+        
+        const blogsAtStart = await helper.blogsInDb()
+
+
+        await api
+            .delete(`/api/blogs/${idToDelete}`)
+            .set('Authorization', 'Bearer ' + token)
+            .expect(204)
 
         const blogsAtEnd = await helper.blogsInDb()
 
         const titles = blogsAtEnd.map(r => r.title)
         const authors = blogsAtEnd.map(r => r.author)
-        assert(!titles.includes(blogToDelete.title) && ! authors.includes(blogToDelete.author))
+        assert(!titles.includes(result.body.title) && ! authors.includes(result.body.author))
 
         assert.strictEqual(blogsAtStart.length, blogsAtEnd.length+1)
     })

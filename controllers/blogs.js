@@ -1,15 +1,19 @@
 const blogsRouter = require('express').Router()
-const { request } = require('../app')
 const Blog = require('../models/blog')
+const User = require('../models/user')
+const jwt = require('jsonwebtoken')
+const { userExtractor } = require('../utils/middleware')
 
 blogsRouter.get('/', async (request, response) => {
-  const blogs = await Blog.find({})
+  const blogs = await Blog
+    .find({}).populate('user', { username: 1, name: 1, id: 1} )
   response.json(blogs)
   })
 
 blogsRouter.get('/:id', async (request, response) => {
   try {
-    const result = await Blog.findById(request.params.id)
+    const result = await Blog
+      .findById(request.params.id).populate('user', { username: 1, name: 1, id: 1} )
     if (result) response.json(result)
         else response.status(404).end() 
     } catch (error) {
@@ -17,8 +21,12 @@ blogsRouter.get('/:id', async (request, response) => {
     }
   })
 
-blogsRouter.post('/', async (request, response) => {
+blogsRouter.post('/', userExtractor, async (request, response) => {
   const blog = new Blog(request.body)
+
+  const user = request.user
+
+  blog.user = user._id
 
   if (blog.likes === undefined) {
     blog.likes = 0;
@@ -30,13 +38,26 @@ blogsRouter.post('/', async (request, response) => {
   } else {
 
     const result = await blog.save()
+    user.blogs = user.blogs.concat(result._id)
+    await user.save()
+
     response.status(201).json(result)
   }
 })
 
-blogsRouter.delete('/:id', async (request, response) => {
-    const result = await Blog.findByIdAndDelete(request.params.id)
+blogsRouter.delete('/:id', userExtractor, async (request, response) => {
+
+  const user = request.user
+
+  const blog = await Blog.findById(request.params.id)
+
+  if (blog.user.toString() === user._id.toString()) {
+    await Blog.deleteOne(blog)
     response.status(204).end()
+  } else {
+    response.status(403).json({ error: 'no permission to delete blog'})
+  }
+  
 })
 
 blogsRouter.put('/:id', async (request, response) => {
